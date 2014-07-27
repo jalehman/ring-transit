@@ -1,4 +1,4 @@
-(ns ring-transit.core
+(ns ring.middleware.transit
   (:import (java.io ByteArrayOutputStream))
   (:require [ring.util.response :refer :all]
             [plumbing.core :refer [keywordize-map]]
