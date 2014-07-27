@@ -8,7 +8,7 @@
   :scm {:name "git"
         :url "https://github.com/jalehman/ring-transit"}
 
-  :signing {:gpg-key "jalehman37@gmail.com"}
+  :signing {:gpg-key "3916C690"}
 
   :deploy-repositories [["clojars" {:creds :gpg}]]
 
