@@ -1,4 +1,4 @@
-(defproject ring-transit "0.1.0-SNAPSHOT"
+(defproject ring-transit "0.1.0"
   :description "Ring middleware for handling transit format"
   :url "https://github.com/jalehman/ring-transit"
   :license {:name "Eclipse Public License"
