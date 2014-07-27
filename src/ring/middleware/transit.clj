@@ -87,13 +87,15 @@
   Accepts the following options:
 
   :encoding - one of #{:json :msgpack}"
-  [handler & [{:keys [encoding] :or {encoding :json}}]]
-  (assert (#{:json :msgpack} encoding) "The encoding must be one of #{:json :msgpack}.")
-  (fn [request]
-    (let [response (handler request)]
-      (if (coll? (:body response))
-        (let [transit-response (update-in response [:body] write encoding)]
-          (if (contains? (:headers response) "Content-Type")
-            transit-response
-            (content-type transit-response (format "application/transit+%s; charset=utf-8" (name encoding)))))
-        response))))
+  {:arglists '([handler] [handler options])}
+  [handler & [{:as options}]]
+  (let [{:keys [encoding] :or {encoding :json}} options]
+    (assert (#{:json :msgpack} encoding) "The encoding must be one of #{:json :msgpack}.")
+    (fn [request]
+      (let [response (handler request)]
+        (if (coll? (:body response))
+          (let [transit-response (update-in response [:body] write encoding)]
+            (if (contains? (:headers response) "Content-Type")
+              transit-response
+              (content-type transit-response (format "application/transit+%s; charset=utf-8" (name encoding)))))
+          response)))))
