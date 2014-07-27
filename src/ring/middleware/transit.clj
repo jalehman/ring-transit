@@ -12,8 +12,6 @@
     (.reset baos)
     ret))
 
-(write {:foo "bar"} :json)
-
 (defn- transit-request? [request]
   (if-let [type (:content-type request)]
     (let [mtch (re-find #"^application/transit\+(json|msgpack)" type)]
