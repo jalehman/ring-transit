@@ -4,9 +4,9 @@
             [plumbing.core :refer [keywordize-map]]
             [cognitect.transit :as transit]))
 
-(defn- write [x t]
+(defn- write [x t opts]
   (let [baos (ByteArrayOutputStream.)
-        w    (transit/writer baos t)
+        w    (transit/writer baos t opts)
         _    (transit/write w x)
         ret  (.toString baos)]
     (.reset baos)
@@ -17,11 +17,11 @@
     (let [mtch (re-find #"^application/transit\+(json|msgpack)" type)]
       [(not (empty? mtch)) (keyword (second mtch))])))
 
-(defn- read-transit [request & [keywords?]]
+(defn- read-transit [request {:keys [keywords? opts]}]
   (let [[res t] (transit-request? request)]
     (if res
       (if-let [body (:body request)]
-        (let [rdr (transit/reader body t)
+        (let [rdr (transit/reader body t opts)
               f   (if keywords? keywordize-map identity)]
           (try
             [true (f (transit/read rdr))]
@@ -42,12 +42,14 @@
   Accepts the following options:
 
   :keywords?          - true if the keys of maps should be turned into keywords
+  :opts               - a map of options to be passed to the transit reader
   :malformed-response - a response map to return when the JSON is malformed"
   {:arglists '([handler] [handler options])}
-  [handler & [{:keys [keywords? malformed-response]
-               :or {malformed-response default-malformed-response}}]]
+  [handler & [{:keys [malformed-response]
+               :or {malformed-response default-malformed-response}
+               :as options}]]
   (fn [request]
-    (if-let [[valid? transit] (read-transit request keywords?)]
+    (if-let [[valid? transit] (read-transit request options)]
       (if valid?
         (handler (assoc request :body transit))
         malformed-response)
@@ -67,14 +69,16 @@
   Accepts the following options:
 
   :malformed-response - a response map to return when the JSON is malformed
+  :opts               - a map of options to be passed to the transit reader
 
   Use the standard Ring middleware, ring.middleware.keyword-params, to
   convert the parameters into keywords."
   {:arglists '([handler] [handler options])}
   [handler & [{:keys [malformed-response]
-               :or {malformed-response default-malformed-response}}]]
+               :or {malformed-response default-malformed-response}
+               :as options}]]
   (fn [request]
-    (if-let [[valid? transit] (read-transit request)]
+    (if-let [[valid? transit] (read-transit request options)]
       (if valid?
         (handler (assoc-transit-params request transit))
         malformed-response)
@@ -86,15 +90,16 @@
 
   Accepts the following options:
 
-  :encoding - one of #{:json :msgpack}"
+  :encoding - one of #{:json :json-verbose :msgpack}
+  :opts     - a map of options to be passed to the transit writer"
   {:arglists '([handler] [handler options])}
   [handler & [{:as options}]]
-  (let [{:keys [encoding] :or {encoding :json}} options]
-    (assert (#{:json :msgpack} encoding) "The encoding must be one of #{:json :msgpack}.")
+  (let [{:keys [encoding opts] :or {encoding :json}} options]
+    (assert (#{:json :json-verbose :msgpack} encoding) "The encoding must be one of #{:json :json-verbose :msgpack}.")
     (fn [request]
       (let [response (handler request)]
         (if (coll? (:body response))
-          (let [transit-response (update-in response [:body] write encoding)]
+          (let [transit-response (update-in response [:body] write encoding opts)]
             (if (contains? (:headers response) "Content-Type")
               transit-response
               (content-type transit-response (format "application/transit+%s; charset=utf-8" (name encoding)))))

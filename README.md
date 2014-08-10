@@ -7,7 +7,7 @@ Standard Ring middleware functions for handling [Transit](https://github.com/cog
 Add the following in `project.clj` under `:dependencies`:
 
 ```
-[ring-transit "0.1.1"]
+[ring-transit "0.1.2"]
 ```
 
 ## Usage
@@ -25,10 +25,13 @@ collection as a body (e.g. map, vector, set, seq, etc) into Transit:
   (response {:foo "bar"}))
 
 (def app
-  (wrap-transit-response handler {:encoding :json}))
+  (wrap-transit-response handler {:encoding :json, :opts {}}}))
 ```
 
-**Note:** the `:encoding` option must be one of `#{:json :msgpack}`. The default
+`:opts` is a map of options that will be passed to
+[`transit/writer`](https://github.com/cognitect/transit-clj/blob/master/src/cognitect/transit.clj#L121)
+
+**Note:** the `:encoding` option must be one of `#{:json :json-verbose :msgpack}`. The default
 is `:json`.
 
 The `wrap-transit-body` middleware will parse the body of any request
@@ -43,8 +46,11 @@ with a transit content-type into a Clojure data structure:
   (response "Uploaded user."))
 
 (def app
-  (wrap-transit-body handler {:keywords? true}))
+  (wrap-transit-body handler {:keywords? true :opts {}}))
 ```
+
+`:opts` is a map of options that will be passed to
+[`transit/reader`](https://github.com/cognitect/transit-clj/blob/master/src/cognitect/transit.clj#L254)
 
 **Note:** The keywords? option will attempt to recursively convert all keys
 to keywords (nested maps allowed!).
@@ -62,8 +68,11 @@ map:
   (response "Uploaded user."))
 
 (def app
-  (wrap-transit-params handler))
+  (wrap-transit-params handler {:opts {}}))
 ```
+
+`:opts` is a map of options that will be passed to
+[`transit/reader`](https://github.com/cognitect/transit-clj/blob/master/src/cognitect/transit.clj#L254)
 
 
 ## License
