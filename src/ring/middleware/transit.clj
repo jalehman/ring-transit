@@ -56,11 +56,10 @@
       (handler request))))
 
 (defn- assoc-transit-params [request transit]
-  (if (map? transit)
-    (-> request
-        (assoc :transit-params transit)
-        (update-in [:params] merge transit))
-    request))
+  (let [request (assoc request :transit-params transit)]
+    (if (map? transit)
+      (update-in request [:params] merge transit)
+      request)))
 
 (defn wrap-transit-params
   "Middleware that parses the body of Transit requests into a map of parameters,
