@@ -25,7 +25,7 @@ collection as a body (e.g. map, vector, set, seq, etc) into Transit:
   (response {:foo "bar"}))
 
 (def app
-  (wrap-transit-response handler {:encoding :json, :opts {}}}))
+  (wrap-transit-response handler {:encoding :json, :opts {}}))
 ```
 
 `:opts` is a map of options that will be passed to
