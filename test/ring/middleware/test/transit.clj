@@ -13,9 +13,9 @@
 
     (testing "transit body"
       (let [request  {:content-type "application/transit+json; charset=UTF-8"
-                      :body (string-input-stream "[\"^ \",\"foo\",\"bar\"]")}
+                      :body (string-input-stream "[\"^ \",\"baz\",\"qüüx\"]")}
             response (handler request)]
-        (is (= {"foo" "bar"} (:body response)))))
+        (is (= {"baz" "qüüx"} (:body response)))))
 
     (testing "malformed json"
       (let [request {:content-type "application/transit+json; charset=UTF-8"
@@ -30,7 +30,7 @@
       (let [request  {:content-type "application/transit+json"
                       :body (string-input-stream "[\"^ \",\"foo\",\"bar\"]")}
             response (handler request)]
-        (is (= {:foo "bar"} (:body response))))))
+        (is (= {:foo "bar"} (:body response))))))  
 
   (testing "custom malformed transit"
     (let [malformed {:status 400
@@ -113,10 +113,10 @@
       (is (= (:body response) "[\"^ \",\"~:foo\",\"bar\"]"))))
 
   (testing "string body"
-    (let [handler  (constantly {:status 200 :headers {} :body "foobar"})
+    (let [handler  (constantly {:status 200 :headers {} :body "qüüx"})
           response ((wrap-transit-response handler) {})]
       (is (= (:headers response) {}))
-      (is (= (:body response) "foobar"))))
+      (is (= (:body response) "qüüx"))))
 
   (testing "vector body"
     (let [handler  (constantly {:status 200 :headers {} :body [:foo :bar]})
