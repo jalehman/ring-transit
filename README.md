@@ -7,7 +7,7 @@ Standard Ring middleware functions for handling [Transit](https://github.com/cog
 Add the following in `project.clj` under `:dependencies`:
 
 ```
-[ring-transit "0.1.3"]
+[ring-transit "0.1.4"]
 ```
 
 ## Usage
