@@ -30,7 +30,7 @@
       (let [request  {:content-type "application/transit+json"
                       :body (string-input-stream "[\"^ \",\"foo\",\"bar\"]")}
             response (handler request)]
-        (is (= {:foo "bar"} (:body response))))))  
+        (is (= {:foo "bar"} (:body response))))))
 
   (testing "custom malformed transit"
     (let [malformed {:status 400
@@ -141,4 +141,11 @@
     (let [handler  (constantly {:status 200 :headers {"Content-Type" "application/transit+json; some-param=some-value"} :body {:foo "bar"}})
           response ((wrap-transit-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/transit+json; some-param=some-value"))
-      (is (= (:body response) "[\"^ \",\"~:foo\",\"bar\"]")))))
+      (is (= (:body response) "[\"^ \",\"~:foo\",\"bar\"]"))))
+
+  (testing "leaves responses with other Content-Types unchanged"
+    (let [handler  (constantly {:status 200 :headers {"Content-Type" "application/json"}
+                                :body "{\"foo\": \"bar\"}"})
+          response ((wrap-transit-response handler) {})]
+      (is (= (get-in response [:headers "Content-Type"]) "application/json"))
+      (is (= (:body response) "{\"foo\": \"bar\"}")))))

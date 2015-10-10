@@ -15,6 +15,10 @@
     (.reset baos)
     ret))
 
+(defn- transit-response? [response]
+  (if-let [type (get-header response "Content-Type")]
+    (not (empty? (re-find #"^application/transit\+(json|msgpack)" type)))))
+
 (defn- transit-request? [request]
   (if-let [type (:content-type request)]
     (let [mtch (re-find #"^application/transit\+(json|msgpack)" type)]
@@ -102,14 +106,18 @@
     (transit-handler handler -assoc-transit-params ::wrap-transit-params options)))
 
 (defn transit-response
-  "Create a transit response based on options."
+  "Create a transit response based on provided options. Will leave responses
+  with non-transit Content Type will be returned unaltered."
   [response request {:keys [opts encoding charset]}]
-  (if (coll? (:body response))
-    (let [transit-response (update-in response [:body] write encoding charset opts)]
+  (letfn [(-transit-response []
+            (update-in response [:body] write encoding charset opts))]
+    (if (coll? (:body response))
       (if (contains? (:headers response) "Content-Type")
-        transit-response
-        (content-type transit-response (format "application/transit+%s; charset=%s" (name encoding) charset))))
-    response))
+        (if (transit-response? response)
+          (-transit-response) ;; content type is already set to transit, just update the body.
+          response) ;; There's a content type set and it's not transit -- return it as-is.
+        (content-type (-transit-response) (format "application/transit+%s; charset=%s" (name encoding) charset)))
+      response)))
 
 (defn wrap-transit-response
   "Middleware that converts responses with a map or a vector for a body into a
