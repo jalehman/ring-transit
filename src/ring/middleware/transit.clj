@@ -26,7 +26,7 @@
           (try
             [true (f (transit/read rdr))]
             (catch Exception ex
-              [false nil])))))))
+              [false ex])))))))
 
 (def ^{:doc "The default response to return when a Transit request is malformed."}
   default-malformed-response
@@ -43,16 +43,19 @@
 
   :keywords?          - true if the keys of maps should be turned into keywords
   :opts               - a map of options to be passed to the transit reader
-  :malformed-response - a response map to return when the JSON is malformed"
+  :malformed-response - a response map to return when the Transit is malformed
+  :malformed-response-fn "
   {:arglists '([handler] [handler options])}
-  [handler & [{:keys [malformed-response]
+  [handler & [{:keys [malformed-response malformed-response-fn]
                :or {malformed-response default-malformed-response}
                :as options}]]
   (fn [request]
-    (if-let [[valid? transit] (read-transit request options)]
+    (if-let [[valid? transit-or-ex] (read-transit request options)]
       (if valid?
-        (handler (assoc request :body transit))
-        malformed-response)
+        (handler (assoc request :body transit-or-ex))
+        (if malformed-response-fn
+          (malformed-response-fn transit-or-ex request)
+          malformed-response))
       (handler request))))
 
 (defn- assoc-transit-params [request transit]

@@ -35,11 +35,24 @@
   (testing "custom malformed transit"
     (let [malformed {:status 400
                      :headers {"Content-Type" "text/html"}
-                     :body "<b>Your Transit is wrong!</b>"}
+                     :body "<b>Your Transit is malformed!</b>"}
           handler (wrap-transit-body identity {:malformed-response malformed})
           request {:content-type "application/transit+json"
                    :body (string-input-stream "{\"foo\": \"bar\"")}]
-      (is (= (handler request) malformed)))))
+      (is (= (handler request) malformed))))
+
+  (testing "custom malformed handler"
+    (let [handler (wrap-transit-body identity {:malformed-response-fn
+                                               (fn [ex req]
+                                                 {:body "Oh no!"
+                                                  :exception ex
+                                                  :request req})})
+          request {:content-type "application/transit+json"
+                   :body (ring.util.io/string-input-stream "{\"foo\": \"bar\"")}
+          result (handler request)]
+      (is (instance? java.lang.Throwable (:exception result)))
+      (is (= "Oh no!" (:body result)))
+      (is (= request (:request result))))))
 
 (deftest test-transit-params
   (let [handler  (wrap-transit-params identity)]
