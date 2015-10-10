@@ -43,16 +43,24 @@
 
   (testing "custom malformed handler"
     (let [handler (wrap-transit-body identity {:malformed-response-fn
-                                               (fn [ex req]
-                                                 {:body "Oh no!"
+                                               (fn [ex req _]
+                                                 {:body      "Oh no!"
                                                   :exception ex
-                                                  :request req})})
+                                                  :request   req})})
           request {:content-type "application/transit+json"
                    :body (ring.util.io/string-input-stream "{\"foo\": \"bar\"")}
           result (handler request)]
       (is (instance? java.lang.Throwable (:exception result)))
       (is (= "Oh no!" (:body result)))
-      (is (= request (:request result))))))
+      (is (= request (:request result)))))
+
+  (testing "idempotence of `wrap-transit-body'"
+    (let [handler (-> (wrap-transit-body identity {:keywords? false})
+                      (wrap-transit-body {:keywords? true}))
+          request {:content-type "application/transit+json"
+                   :body (string-input-stream "[\"^ \",\"foo\",\"bar\"]")}
+          response (handler request)]
+      (is (= {:foo "bar"} (:body response))))))
 
 (deftest test-transit-params
   (let [handler  (wrap-transit-params identity)]

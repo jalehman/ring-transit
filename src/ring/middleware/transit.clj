@@ -41,22 +41,25 @@
 
   Accepts the following options:
 
-  :keywords?          - true if the keys of maps should be turned into keywords
-  :opts               - a map of options to be passed to the transit reader
-  :malformed-response - a response map to return when the Transit is malformed
-  :malformed-response-fn "
+  :keywords?               - true if the keys of maps should be turned into keywords
+  :opts                    - a map of options to be passed to the transit reader
+  :malformed-response      - a response map to return when the Transit is malformed
+  :malformed-response-fn   - a custom error handler that gets called when the body is malformed
+                             transit. Will be called with three parameters: [exception request handler]"
   {:arglists '([handler] [handler options])}
   [handler & [{:keys [malformed-response malformed-response-fn]
                :or {malformed-response default-malformed-response}
                :as options}]]
   (fn [request]
-    (if-let [[valid? transit-or-ex] (read-transit request options)]
-      (if valid?
-        (handler (assoc request :body transit-or-ex))
-        (if malformed-response-fn
-          (malformed-response-fn transit-or-ex request)
-          malformed-response))
-      (handler request))))
+    (if (::wrap-transit-body request)
+      (handler request)
+      (if-let [[valid? transit-or-ex] (read-transit request options)]
+        (if valid?
+          (handler (assoc request :body transit-or-ex ::wrap-transit-body true))
+          (if malformed-response-fn
+            (malformed-response-fn transit-or-ex request handler)
+            malformed-response))
+        (handler request)))))
 
 (defn- assoc-transit-params [request transit]
   (let [request (assoc request :transit-params transit)]
@@ -97,7 +100,8 @@
   {:arglists '([handler] [handler options])}
   [handler & [{:as options}]]
   (let [{:keys [encoding opts] :or {encoding :json}} options]
-    (assert (#{:json :json-verbose :msgpack} encoding) "The encoding must be one of #{:json :json-verbose :msgpack}.")
+    (assert (#{:json :json-verbose :msgpack} encoding)
+            "The encoding must be one of #{:json :json-verbose :msgpack}.")
     (fn [request]
       (let [response (handler request)]
         (if (coll? (:body response))
