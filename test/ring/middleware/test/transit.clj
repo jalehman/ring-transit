@@ -107,10 +107,10 @@
 
 (deftest test-json-response
   (testing "map body"
-    (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar"}})
+    (let [handler  (constantly {:status 200 :headers {} :body {:foo "qüüx"}})
           response ((wrap-transit-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/transit+json; charset=utf-8"))
-      (is (= (:body response) "[\"^ \",\"~:foo\",\"bar\"]"))))
+      (is (= (:body response) "[\"^ \",\"~:foo\",\"qüüx\"]"))))
 
   (testing "string body"
     (let [handler  (constantly {:status 200 :headers {} :body "qüüx"})
