@@ -6,19 +6,19 @@
 (deftest test-transit-body
   (let [handler (wrap-transit-body identity)]
     (testing "xml body"
-      (let [request  {:content-type "application/xml"
+      (let [request  {:headers {"Content-Type" "application/xml"}
                       :body (string-input-stream "<xml></xml>")}
             response (handler request)]
         (is (= "<xml></xml>") (slurp (:body response)))))
 
     (testing "transit body"
-      (let [request  {:content-type "application/transit+json; charset=UTF-8"
+      (let [request  {:headers {"Content-Type" "application/transit+json; charset=UTF-8"}
                       :body (string-input-stream "[\"^ \",\"baz\",\"qüüx\"]")}
             response (handler request)]
         (is (= {"baz" "qüüx"} (:body response)))))
 
     (testing "malformed json"
-      (let [request {:content-type "application/transit+json; charset=UTF-8"
+      (let [request {:headers {"Content-Type" "application/transit+json; charset=UTF-8"}
                      :body (string-input-stream "[\"^ \",\"foo\",\"bar\"")}]
         (is (= (handler request)
                {:status  400
@@ -27,7 +27,7 @@
 
   (let [handler (wrap-transit-body identity {:keywords? true})]
     (testing "keyword keys"
-      (let [request  {:content-type "application/transit+json"
+      (let [request  {:headers {"Content-Type" "application/transit+json"}
                       :body (string-input-stream "[\"^ \",\"foo\",\"bar\"]")}
             response (handler request)]
         (is (= {:foo "bar"} (:body response))))))
@@ -37,7 +37,7 @@
                      :headers {"Content-Type" "text/html"}
                      :body "<b>Your Transit is malformed!</b>"}
           handler (wrap-transit-body identity {:malformed-response malformed})
-          request {:content-type "application/transit+json"
+          request {:headers {"Content-Type" "application/transit+json"}
                    :body (string-input-stream "{\"foo\": \"bar\"")}]
       (is (= (handler request) malformed))))
 
@@ -47,7 +47,7 @@
                                                  {:body      "Oh no!"
                                                   :exception ex
                                                   :request   req})})
-          request {:content-type "application/transit+json"
+          request {:headers {"Content-Type" "application/transit+json"}
                    :body (ring.util.io/string-input-stream "{\"foo\": \"bar\"")}
           result (handler request)]
       (is (instance? java.lang.Throwable (:exception result)))
@@ -57,7 +57,7 @@
   (testing "idempotence of `wrap-transit-body'"
     (let [handler (-> (wrap-transit-body identity {:keywords? false})
                       (wrap-transit-body {:keywords? true}))
-          request {:content-type "application/transit+json"
+          request {:headers {"Content-Type" "application/transit+json"}
                    :body (string-input-stream "[\"^ \",\"foo\",\"bar\"]")}
           response (handler request)]
       (is (= {:foo "bar"} (:body response))))))
@@ -65,7 +65,7 @@
 (deftest test-transit-params
   (let [handler  (wrap-transit-params identity)]
     (testing "xml body"
-      (let [request  {:content-type "application/xml"
+      (let [request  {:headers {"Content-Type" "application/xml"}
                       :body (string-input-stream "<xml></xml>")
                       :params {"id" 3}}
             response (handler request)]
@@ -74,7 +74,7 @@
         (is (nil? (:transit-params response)))))
 
     (testing "transit body"
-      (let [request  {:content-type "application/transit+json; charset=UTF-8"
+      (let [request  {:headers {"Content-Type" "application/transit+json; charset=UTF-8"}
                       :body (string-input-stream "[\"^ \",\"foo\",\"bar\"]")
                       :params {"id" 3}}
             response (handler request)]
@@ -82,14 +82,14 @@
         (is (= {"foo" "bar"} (:transit-params response)))))
 
     (testing "array transit body"
-      (let [request  {:content-type "application/transit+json; charset=UTF-8"
+      (let [request  {:headers {"Content-Type" "application/transit+json; charset=UTF-8"}
                       :body (string-input-stream "[\"foo\"]")
                       :params {"id" 3}}
             response (handler request)]
         (is (= {"id" 3} (:params response)))))
 
     (testing "malformed transit"
-      (let [request {:content-type "application/transit+json; charset=UTF-8"
+      (let [request {:headers {"Content-Type" "application/transit+json; charset=UTF-8"}
                      :body (string-input-stream "[\"^ \",\"foo\",\"bar\"")}]
         (is (= (handler request)
                {:status  400
@@ -101,7 +101,7 @@
                        :headers {"Content-Type" "text/html"}
                        :body "<b>Your Transit is wrong!</b>"}
             handler (wrap-transit-params identity {:malformed-response malformed})
-            request {:content-type "application/transit+json"
+            request {:headers {"Content-Type" "application/transit+json"}
                      :body (string-input-stream "[\"^ \",\"foo\",\"bar\"")}]
         (is (= (handler request) malformed))))))
 
