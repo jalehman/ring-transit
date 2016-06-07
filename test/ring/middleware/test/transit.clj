@@ -9,7 +9,7 @@
       (let [request  {:content-type "application/xml"
                       :body (string-input-stream "<xml></xml>")}
             response (handler request)]
-        (is (= "<xml></xml>") (slurp (:body response)))))
+        (is (= "<xml></xml>" (slurp (:body response))))))
 
     (testing "transit body"
       (let [request  {:content-type "application/transit+json; charset=UTF-8"
@@ -69,7 +69,7 @@
                       :body (string-input-stream "<xml></xml>")
                       :params {"id" 3}}
             response (handler request)]
-        (is (= "<xml></xml>") (slurp (:body response)))
+        (is (= "<xml></xml>" (slurp (:body response))))
         (is (= {"id" 3} (:params response)))
         (is (nil? (:transit-params response)))))
 
