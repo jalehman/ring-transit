@@ -7,7 +7,7 @@ Standard Ring middleware functions for handling [Transit](https://github.com/cog
 Add the following in `project.clj` under `:dependencies`:
 
 ```
-[ring-transit "0.1.4"]
+[ring-transit "0.1.5"]
 ```
 
 ## Usage
@@ -77,7 +77,7 @@ map:
 
 ## License
 
-Copyright © 2014 Josh Lehman
+Copyright © 2016 Josh Lehman
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
