@@ -23,7 +23,13 @@
         (is (= (handler request)
                {:status  400
                 :headers {"Content-Type" "text/plain"}
-                :body    "Malformed Transit in request body."})))))
+                :body    "Malformed Transit in request body."}))))
+
+    (testing "headers are accessed in a case-insensitive manner"
+      (let [request  {:headers {"content-type" "application/transit+json; charset=UTF-8"}
+                      :body (string-input-stream "[\"^ \",\"monni\",\"tiskaa\"]")}
+            response (handler request)]
+        (is (= {"monni" "tiskaa"} (:body response))))))
 
   (let [handler (wrap-transit-body identity {:keywords? true})]
     (testing "keyword keys"

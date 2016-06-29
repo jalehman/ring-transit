@@ -20,7 +20,7 @@
     (not (empty? (re-find #"^application/transit\+(json|msgpack)" type)))))
 
 (defn- transit-request? [request]
-  (when-let [type (get-in request [:headers "Content-Type"])]
+  (when-let [type (get-header request "Content-Type")]
     (let [mtch (re-find #"^application/transit\+(json|msgpack)" type)]
       [(not (empty? mtch)) (keyword (second mtch))])))
 
