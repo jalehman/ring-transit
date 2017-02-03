@@ -2,6 +2,21 @@
 
 Standard Ring middleware functions for handling [Transit](https://github.com/cognitect/transit-format) requests and responses.
 
+## Disclaimer
+
+This library was created less than a week after Transit was released and was
+modeled after the very
+similar [ring-json](https://github.com/ring-clojure/ring-json). Since then
+other, more well-thought-out libraries have emerged that are *much* more
+actively maintained. Some of these are:
+
+- [ring-middleware-format](https://github.com/ngrunwald/ring-middleware-format):
+  A general-purpose ring middleware for handling lots of different content
+  types. **If you're building a ring-based app, `ring-middleware-format` is
+  recommended over this library**.
+- [liberator-transit](https://github.com/sattvik/liberator-transit): If you're
+  using [liberator](https://github.com/clojure-liberator/liberator), this may be a good choice.
+
 ## Installation
 
 Add the following in `project.clj` under `:dependencies`:
